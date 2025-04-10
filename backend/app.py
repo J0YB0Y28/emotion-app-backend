@@ -10,6 +10,7 @@ from utils.data_land_marker import LandMarker
 from sklearn.ensemble import RandomForestClassifier
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 CORS(app)
 
 # === Initialisation globale ===
