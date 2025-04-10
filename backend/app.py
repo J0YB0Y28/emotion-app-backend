@@ -37,19 +37,29 @@ classifier = ImageClassifier(csv_path=CSV_PATH, algorithm=ALGORITHM, land_marker
 # === Route principale de prédiction ===
 @app.route('/predict', methods=['POST'])
 def predict_emotion():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image provided'}), 400
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
 
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({'error': 'Empty filename'}), 400
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'Empty filename'}), 400
 
-    file_bytes = np.frombuffer(file.read(), np.uint8)
-    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        file_bytes = np.frombuffer(file.read(), np.uint8)
+        img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-    prediction = classifier.classify(gray_img)
-    return jsonify({'prediction': prediction})
+        if img is None:
+            return jsonify({'error': 'Invalid image format'}), 400
+
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        prediction = classifier.classify(gray_img)
+
+        return jsonify({'prediction': [prediction]})  # 👈 envoie une liste pour compatibilité front
+
+    except Exception as e:
+        print(f"❌ Erreur lors de la prédiction : {e}")
+        return jsonify({'error': 'Erreur interne du serveur'}), 500
 
 
 # === Route d'accueil optionnelle ===
