@@ -3,8 +3,6 @@ from flask_cors import CORS
 import numpy as np
 import cv2
 import os
-import urllib.request
-import bz2
 import gdown
 
 from utils.image_classifier import ImageClassifier
@@ -12,25 +10,22 @@ from utils.data_land_marker import LandMarker
 from sklearn.ensemble import RandomForestClassifier
 
 app = Flask(__name__)
-CORS(app)  # Autoriser les requêtes cross-origin (depuis React par ex.)
+CORS(app)
 
 # === Initialisation globale ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# === Gestion auto du fichier .dat ===
+# === Gestion auto du fichier .dat depuis Google Drive ===
 PREDICTOR_PATH = os.path.join(BASE_DIR, 'utils', 'shape_predictor_68_face_landmarks.dat')
 GDRIVE_FILE_ID = "1MxaIE8aOPzsHbez011bpGQ2-qNLdpr8k"
 
-# Télécharger automatiquement le modèle si absent
 if not os.path.isfile(PREDICTOR_PATH):
     print("⬇️ Téléchargement du modèle depuis Google Drive...")
     url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
     gdown.download(url, PREDICTOR_PATH, quiet=False)
     print("✅ Modèle téléchargé depuis Google Drive !")
 
-    os.remove(compressed_path)
-    print("✅ Modèle téléchargé et prêt !")
-
+# === Chemin vers dataset et algorithme choisi ===
 CSV_PATH = os.path.join(BASE_DIR, 'data', 'csv', 'dataset.csv')
 if not os.path.isfile(CSV_PATH):
     raise FileNotFoundError(f"❌ Fichier non trouvé : {CSV_PATH}")
@@ -56,6 +51,11 @@ def predict_emotion():
     prediction = classifier.classify(gray_img)
     return jsonify({'prediction': prediction})
 
+
+# === Route d'accueil optionnelle ===
+@app.route("/", methods=["GET"])
+def index():
+    return "✅ API Emotion Detection en ligne !", 200
 
 # === Lancement local ===
 if __name__ == '__main__':
