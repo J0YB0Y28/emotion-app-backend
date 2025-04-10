@@ -5,6 +5,7 @@ import cv2
 import os
 import urllib.request
 import bz2
+import gdown
 
 from utils.image_classifier import ImageClassifier
 from utils.data_land_marker import LandMarker
@@ -18,16 +19,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # === Gestion auto du fichier .dat ===
 PREDICTOR_PATH = os.path.join(BASE_DIR, 'utils', 'shape_predictor_68_face_landmarks.dat')
-PREDICTOR_URL = "http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2"
+GDRIVE_FILE_ID = "1MxaIE8aOPzsHbez011bpGQ2-qNLdpr8k"
 
+# Télécharger automatiquement le modèle si absent
 if not os.path.isfile(PREDICTOR_PATH):
-    print("⬇️ Téléchargement du modèle shape_predictor...")
-    compressed_path = PREDICTOR_PATH + ".bz2"
-    urllib.request.urlretrieve(PREDICTOR_URL, compressed_path)
-
-    print("📦 Décompression...")
-    with bz2.BZ2File(compressed_path) as fr, open(PREDICTOR_PATH, "wb") as fw:
-        fw.write(fr.read())
+    print("⬇️ Téléchargement du modèle depuis Google Drive...")
+    url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
+    gdown.download(url, PREDICTOR_PATH, quiet=False)
+    print("✅ Modèle téléchargé depuis Google Drive !")
 
     os.remove(compressed_path)
     print("✅ Modèle téléchargé et prêt !")
