@@ -3,19 +3,29 @@ from flask_cors import CORS
 import numpy as np
 import cv2
 import os
+import gdown
 
 from utils.image_classifier import ImageClassifier
 from utils.data_land_marker import LandMarker
 from sklearn.ensemble import RandomForestClassifier
 
 app = Flask(__name__)
-CORS(app)  # Autoriser les requêtes cross-origin (depuis React par ex.)
+CORS(app)
 
 # === Initialisation globale ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# === Gestion auto du fichier .dat depuis Google Drive ===
 PREDICTOR_PATH = os.path.join(BASE_DIR, 'utils', 'shape_predictor_68_face_landmarks.dat')
+GDRIVE_FILE_ID = "1MxaIE8aOPzsHbez011bpGQ2-qNLdpr8k"
+
 if not os.path.isfile(PREDICTOR_PATH):
-    raise FileNotFoundError(f"❌ Fichier non trouvé : {PREDICTOR_PATH}")
+    print("⬇️ Téléchargement du modèle depuis Google Drive...")
+    url = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
+    gdown.download(url, PREDICTOR_PATH, quiet=False)
+    print("✅ Modèle téléchargé depuis Google Drive !")
+
+# === Chemin vers dataset et algorithme choisi ===
 CSV_PATH = os.path.join(BASE_DIR, 'data', 'csv', 'dataset.csv')
 if not os.path.isfile(CSV_PATH):
     raise FileNotFoundError(f"❌ Fichier non trouvé : {CSV_PATH}")
@@ -23,7 +33,6 @@ ALGORITHM = 'RandomForest'
 
 land_marker = LandMarker(landmark_predictor_path=PREDICTOR_PATH)
 classifier = ImageClassifier(csv_path=CSV_PATH, algorithm=ALGORITHM, land_marker=land_marker)
-
 
 # === Route principale de prédiction ===
 @app.route('/predict', methods=['POST'])
@@ -42,6 +51,7 @@ def predict_emotion():
 
     prediction = classifier.classify(gray_img)
     return jsonify({'prediction': prediction})
+
 
 # === Route d'accueil optionnelle ===
 @app.route("/", methods=["GET"])
