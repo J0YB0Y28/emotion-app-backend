@@ -1,0 +1,7 @@
+flask
+flask-cors
+opencv-python-headless==4.8.0.76
+numpy==1.24.4
+scikit-learn
+pandas
+dlib==19.24.0
